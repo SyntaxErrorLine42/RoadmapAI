@@ -1,0 +1,44 @@
+copilot.md
+AGENTS.md
+
+# Local secrets - never commit these
+RoadmapAI.Api/appsettings.Development.json
+RoadmapAI.Api/appsettings.Production.json
+RoadmapAI.Api/appsettings.json
+
+# .NET build output
+RoadmapAI.Api/bin/
+RoadmapAI.Api/obj/
+
+# Angular build output
+RoadmapAI.Client/dist/
+RoadmapAI.Client/node_modules/
+
+# Uploaded course files
+RoadmapAI.Api/uploads/
+
+# Python AI service local files
+Roadmap.AI/.env
+Roadmap.AI/.venv/
+Roadmap.AI/**/__pycache__/
+Roadmap.AI/**/*.pyc
+Roadmap.AI/.pytest_cache/
+Roadmap.AI/.ruff_cache/
+
+# Python virtual env / packaging leftovers
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local docs/notes generated during work
+ROADMAP.md
+
+# EF Core migrations snapshot (optional, keep migrations but not this)
+*.user
+/Roadmap.AI/.env.example
+/Roadmap.AI/README.md
+/RoadmapAI.Client/README.md
+/Documentation/PLAN.md

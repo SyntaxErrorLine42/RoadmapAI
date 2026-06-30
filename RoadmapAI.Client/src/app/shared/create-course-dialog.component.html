@@ -1,0 +1,151 @@
+<p-dialog
+  header="Create New Course"
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  [modal]="true"
+  [style]="{ width: '42rem', maxWidth: '95vw' }"
+  [closable]="!submitting()"
+  [draggable]="false"
+>
+  <div class="flex flex-col gap-5 pt-1">
+
+    <!-- Course name -->
+    <div class="flex flex-col gap-1.5">
+      <label for="courseName" class="text-sm font-bold text-on-surface">
+        Course Name
+      </label>
+      <input
+        pInputText
+        id="courseName"
+        [(ngModel)]="courseName"
+        placeholder="e.g. Linear Algebra"
+        [disabled]="submitting()"
+        class="w-full"
+      />
+    </div>
+
+    <!-- Drop zone -->
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-bold text-on-surface">
+        Course Materials
+      </label>
+        <p class="text-xs text-on-surface-variant">
+        Lectures, past exams, lab exercises - PDF, DOCX, PPTX, TXT and more
+      </p>
+
+      <div
+        class="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer select-none transition-colors duration-150"
+        [class.border-primary]="dragging()"
+        [class.bg-primary-container]="dragging()"
+        [class.bg-surface-container-highest]="!dragging()"
+        [class.border-outline-variant]="!dragging()"
+        (click)="fileInput.click()"
+        (dragover)="$event.preventDefault(); dragging.set(true)"
+        (dragleave)="dragging.set(false)"
+        (drop)="onDrop($event)"
+        role="button"
+        tabindex="0"
+        aria-label="Drop files here or click to browse"
+        (keydown.enter)="fileInput.click()"
+        (keydown.space)="fileInput.click()"
+      >
+        <i class="pi pi-cloud-upload text-3xl text-on-surface-variant mb-2 block"></i>
+        <p class="text-sm text-on-surface-variant">
+          Drop files here or <span class="text-primary font-bold">click to browse</span>
+        </p>
+        <p class="text-xs text-on-surface-variant mt-1">PDF, DOCX, PPTX, TXT, XLSX and more · max 50 MB per file</p>
+      </div>
+
+      <!-- Hidden native file input -->
+      <input
+        #fileInput
+        type="file"
+        [accept]="accepted"
+        multiple
+        class="hidden"
+        (change)="onInputChange($event)"
+        aria-hidden="true"
+      />
+    </div>
+
+    <!-- File list -->
+    @if (selectedFiles().length > 0) {
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wide">
+            {{ selectedFiles().length }} {{ selectedFiles().length === 1 ? 'file' : 'files' }} &nbsp;·&nbsp; {{ totalSize() }}
+          </span>
+          <button
+            class="text-xs text-on-surface-variant hover:text-red-500 transition-colors"
+            (click)="clearFiles()"
+            [disabled]="submitting()"
+          >
+            Clear all
+          </button>
+        </div>
+
+        <!-- Scrollable compact list -->
+        <div class="rounded-lg border border-outline-variant bg-surface-container-high overflow-y-auto max-h-48">
+          @for (file of selectedFiles(); track file.name; let i = $index) {
+            <div
+              class="flex items-center gap-3 px-3 py-2 border-outline-variant hover:bg-surface-container-highest transition-colors"
+              [class.border-t]="i > 0"
+            >
+              <i [class]="fileIcon(file.name) + ' text-primary flex-shrink-0'"></i>
+              <span class="flex-1 text-sm text-on-surface truncate min-w-0">
+                {{ file.name }}
+              </span>
+              <span class="text-xs text-on-surface-variant flex-shrink-0 ml-2">{{ formatFileSize(file.size) }}</span>
+              @if (!submitting()) {
+                <button
+                  class="flex-shrink-0 text-on-surface-variant hover:text-red-500 transition-colors ml-1"
+                  (click)="removeFile(i)"
+                  [attr.aria-label]="'Remove ' + file.name"
+                >
+                  <i class="pi pi-times text-xs"></i>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Error -->
+    @if (error()) {
+      <p class="text-sm text-red-500 flex items-center gap-1.5 font-bold">
+        <i class="pi pi-exclamation-circle"></i> {{ error() }}
+      </p>
+    }
+
+    <!-- Upload progress -->
+    @if (submitting()) {
+      <div class="flex flex-col gap-1.5">
+        <div class="flex justify-between text-xs text-on-surface-variant">
+          <span>Uploading files…</span>
+          <span>{{ uploadPercent() }}%</span>
+        </div>
+        <p-progressbar [value]="uploadPercent()" [style]="{ height: '6px' }" [showValue]="false" />
+      </div>
+    }
+  </div>
+
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button
+        label="Cancel"
+        severity="secondary"
+        [text]="true"
+        (onClick)="visible.set(false)"
+        [disabled]="submitting()"
+      />
+      <p-button
+        label="Create Course"
+        icon="pi pi-check"
+        (onClick)="submit()"
+        [disabled]="submitting() || !courseName.trim() || selectedFiles().length === 0"
+        [loading]="submitting()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>

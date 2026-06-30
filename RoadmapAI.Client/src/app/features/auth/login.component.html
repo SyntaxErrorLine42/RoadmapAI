@@ -1,0 +1,94 @@
+<div class="min-h-screen flex flex-col md:flex-row antialiased bg-surface-0">
+
+  <!-- Left Panel: Branding & Illustration -->
+  <div class="hidden md:flex flex-col w-1/2 lg:w-5/12 bg-surface-950 relative overflow-hidden border-r border-surface-900">
+    <div class="absolute inset-0 bg-gradient-to-br from-primary-900/10 via-surface-950 to-surface-950 pointer-events-none z-0"></div>
+    <div class="relative z-10 flex flex-col h-full p-10 lg:p-14 justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center brand-badge">
+          <i class="pi pi-compass text-base"></i>
+        </div>
+        <span class="font-heading font-black text-2xl tracking-tight text-on-surface">RoadmapAI</span>
+      </div>
+      <div class="flex-grow flex flex-col justify-center max-w-md mx-auto w-full gap-10 mt-12 mb-12">
+        <div class="space-y-6">
+          <h1 class="font-heading font-bold text-4xl lg:text-5xl leading-tight text-white text-balance">
+            Master your <br>curriculum with <br><strong class="bg-gradient-to-r from-primary-fixed to-secondary-dim bg-clip-text text-transparent inline-block font-bold">AI-powered</strong> roadmaps.
+          </h1>
+          <p class="text-lg text-surface-200 font-sans font-medium leading-relaxed max-w-sm">
+            Track progress across every course, unlock personalized learning paths, and achieve your academic goals faster.
+          </p>
+        </div>
+        <div class="relative w-full aspect-[4/3] rounded-xl overflow-hidden shadow-2xl border !border-surface-700/30 !bg-surface-900">
+          <img alt="Illustration" class="w-full h-full object-cover" src="assets/images/login-illustration.webp">
+          <div class="absolute inset-0 bg-gradient-to-t from-surface-950/80 to-transparent"></div>
+        </div>
+      </div>
+      <div class="flex items-center gap-6 mt-auto">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-check-circle text-secondary text-lg"></i>
+          <span class="text-sm text-surface-200 font-medium">Smart scheduling</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i class="pi pi-check-circle text-secondary text-lg"></i>
+          <span class="text-sm text-surface-200 font-medium">Progress analytics</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel: Login Form -->
+  <div class="flex-grow w-full md:w-1/2 lg:w-7/12 flex flex-col justify-center items-center p-6 sm:p-12 relative bg-surface-0">
+    <!-- Mobile Brand Header -->
+    <div class="md:hidden flex items-center justify-center gap-2 mb-10 mt-4 w-full">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center brand-badge">
+        <i class="pi pi-compass text-sm"></i>
+      </div>
+      <span class="font-heading font-black text-xl tracking-tight text-on-surface">RoadmapAI</span>
+    </div>
+
+    <!-- Login Card Area -->
+    <div class="w-full max-w-[420px] flex flex-col space-y-8 relative z-10 text-white">
+      @if (error()) {
+        <p-message severity="error" [text]="error()!" class="mb-4 w-full" />
+      }
+      
+      <div class="text-center md:text-left space-y-2">
+        <h2 class="font-heading font-bold text-3xl">Welcome back</h2>
+        <p class="text-surface-200 font-sans">Sign in to continue to your dashboard.</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-white" for="email">Email</label>
+          <div class="relative">
+             <i class="pi pi-envelope absolute top-1/2 -translate-y-1/2 left-4 flex text-surface-200 z-10"></i>
+             <input pInputText id="email" formControlName="email" placeholder="student@university.edu" type="email" class="w-full !pl-12 pr-4 py-3 !bg-surface-800 !border !border-surface-700/50 rounded-lg !text-white placeholder-surface-200/50 focus:ring-2 focus:ring-primary-fixed focus:border-primary-fixed transition-all shadow-sm outline-none">
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-white" for="password">Password</label>
+          <div class="relative">
+            <i class="pi pi-lock absolute top-1/2 -translate-y-1/2 left-4 flex text-surface-200 z-10"></i>
+            <p-password id="password" formControlName="password" [toggleMask]="true" [feedback]="false" placeholder="••••••••" styleClass="w-full flex" inputStyleClass="w-full !pl-12 pr-12 py-3 !bg-surface-800 !border !border-surface-700/50 rounded-lg !text-white placeholder-surface-200/50 focus:ring-2 focus:ring-primary-fixed focus:border-primary-fixed transition-all shadow-sm outline-none" autocomplete="current-password"></p-password>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <p-button type="submit" [disabled]="form.invalid || loading()" styleClass="w-full py-3 px-4 !bg-primary hover:!bg-primary-700 !text-white font-heading font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out border-none flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+            <span>{{ loading() ? 'Signing in...' : 'Sign In' }}</span>
+            @if (!loading()) { <i class="pi pi-arrow-right text-sm"></i> }
+            @if (loading()) { <i class="pi pi-spinner pi-spin text-sm"></i> }
+          </p-button>
+        </div>
+      </form>
+
+      <div class="text-center pt-4">
+        <p class="text-sm text-surface-200">
+            Don't have an account? <a routerLink="/register" class="font-semibold text-primary hover:text-primary-400 transition-colors underline-offset-4 hover:underline cursor-pointer">Sign up</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

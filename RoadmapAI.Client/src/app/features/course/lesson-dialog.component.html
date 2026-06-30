@@ -1,0 +1,180 @@
+@if (selectedLesson()) {
+  <p-dialog
+    [header]="lessonDialogHeader()"
+    [(visible)]="visible"
+    (visibleChange)="onVisibleChange($event)"
+    [focusOnShow]="false"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: '56rem', maxWidth: '95vw' }"
+  >
+    <div class="flex flex-col gap-4 py-2 font-sans">
+      <!-- Status Badge -->
+      <div class="flex items-center justify-between border-b border-outline-variant/60 pb-3">
+        <span class="text-xs font-semibold text-on-surface-variant flex items-center gap-1.5">
+          <i class="pi pi-info-circle text-primary"></i>
+          <span>Status:</span>
+          <span class="font-bold text-primary uppercase">{{ selectedLesson()!.status }}</span>
+        </span>
+      </div>
+
+      <!-- Ingesting / Generation State -->
+      @if (lessonGenerating()) {
+        <div class="flex flex-col items-center justify-center py-12 px-6 text-center gap-4">
+          <div class="relative w-16 h-16 flex items-center justify-center">
+            <!-- Animated outer circle -->
+            <div class="absolute inset-0 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
+            <!-- Inner icon -->
+            <i class="pi pi-sparkles text-2xl text-primary animate-pulse"></i>
+          </div>
+          <div class="flex flex-col gap-1.5 mt-2">
+            <h4 class="text-lg font-bold text-on-surface font-heading animate-pulse">Ingesting materials & generating lesson...</h4>
+            <p class="text-xs text-on-surface-variant max-w-sm">We're crafting a highly-detailed, humanized guide using your course slides, exams, and notes. Hang tight!</p>
+          </div>
+        </div>
+      } @else if (lessonGenerationError()) {
+        <div class="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-600 dark:text-red-400 flex flex-col gap-3">
+          <div class="flex items-center gap-2 font-bold font-heading">
+            <i class="pi pi-exclamation-triangle text-red-500 text-lg animate-bounce"></i>
+            <span>Lesson Generation Failed</span>
+          </div>
+          <p class="text-xs leading-relaxed opacity-90">{{ lessonGenerationError() }}</p>
+          <div class="mt-1">
+            <button
+              type="button"
+              class="cursor-pointer inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-red-700 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500/40"
+              (click)="tryAgainGenerate()"
+            >
+              <i class="pi pi-refresh mr-1.5"></i> Try Again
+            </button>
+          </div>
+        </div>
+      } @else {
+        <!-- Lesson Content Flow -->
+        <div class="prose dark:prose-invert max-w-none text-sm text-on-surface leading-relaxed font-sans">
+          <div
+            class="markdown-content break-words"
+            [innerHTML]="renderedContent()"
+          ></div>
+        </div>
+
+        <!-- Practice Challenge Section (Appears directly below the content) -->
+        <div class="flex flex-col gap-4 mt-6 pt-6 border-t border-outline-variant/60">
+          <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+            <i class="pi pi-check-circle"></i>
+            <span>Practice Challenge</span>
+          </div>
+
+          @if (lessonTask()) {
+            <app-question
+              [questionText]="lessonTask()!.questionText"
+              [optionA]="lessonTask()!.optionA"
+              [optionB]="lessonTask()!.optionB"
+              [optionC]="lessonTask()!.optionC"
+              [optionD]="lessonTask()!.optionD"
+              [selectedOption]="lessonTaskSelection()"
+              [disabled]="selectedLesson()!.status === lessonStatus.Completed"
+              (optionSelected)="selectLessonTaskOption($event)"
+            />
+
+            @if (lessonTaskError()) {
+              <div class="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-medium">
+                <i class="pi pi-exclamation-triangle"></i>
+                <span>{{ lessonTaskError() }}</span>
+              </div>
+            }
+
+            @if (lessonTaskMessage()) {
+              <div class="flex items-center gap-2 p-3 rounded-lg text-xs font-medium" 
+                   [class]="selectedLesson()!.status === lessonStatus.Completed ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400'">
+                <i [class]="selectedLesson()!.status === lessonStatus.Completed ? 'pi pi-check' : 'pi pi-info-circle'"></i>
+                <span>{{ lessonTaskMessage() }}</span>
+              </div>
+            } @else if (selectedLesson()!.status === lessonStatus.Completed) {
+              <div class="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
+                <i class="pi pi-check"></i>
+                <span>Correct answer! Lesson completed successfully.</span>
+              </div>
+            }
+
+            <!-- Solution Hint Toggler -->
+            <div class="flex justify-start">
+              <button
+                type="button"
+                class="cursor-pointer text-xs font-bold text-primary hover:text-primary-dim transition-colors flex items-center gap-1.5 focus:outline-none"
+                (click)="toggleLessonTaskHelp()"
+              >
+                <i class="pi" [class]="lessonTaskHelpVisible() ? 'pi-eye-slash' : 'pi-eye'"></i>
+                <span>{{ lessonTaskHelpVisible() ? 'Hide Solution Hint' : 'Need help? Show Solution Hint' }}</span>
+              </button>
+            </div>
+
+            <!-- Hint Display -->
+            @if (lessonTaskHelpVisible()) {
+              <div class="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/5 text-xs text-on-surface leading-relaxed animate-fadein">
+                <div class="font-bold text-amber-600 dark:text-amber-400 mb-1.5 flex items-center gap-1.5">
+                  <i class="pi pi-lightbulb animate-pulse"></i> Solution Hint / Guidance
+                </div>
+                <div
+                  class="markdown-content break-words font-sans"
+                  [innerHTML]="renderedHelpHtml()"
+                ></div>
+              </div>
+            }
+          } @else if (lessonTaskError()) {
+            <div class="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-medium">
+              <i class="pi pi-exclamation-triangle"></i>
+              <span>{{ lessonTaskError() }}</span>
+            </div>
+          } @else {
+            <div class="flex items-center justify-center py-6 gap-2 text-sm text-on-surface-variant font-medium">
+              <i class="pi pi-spin pi-spinner text-primary"></i>
+              <span>Loading practice challenge task...</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Dialog Footer Actions -->
+    <ng-template #footer>
+      <div class="flex justify-end gap-2 border-t border-outline-variant/60 pt-3 mt-1">
+        <p-button
+          label="Regenerate"
+          icon="pi pi-refresh"
+          severity="secondary"
+          [text]="true"
+          (onClick)="tryAgainGenerate()"
+          [disabled]="lessonGenerating()"
+          class="cursor-pointer"
+        />
+        <p-button
+          label="Previous"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          [text]="true"
+          (onClick)="openPreviousLesson()"
+          [disabled]="lessonGenerating()"
+          class="cursor-pointer"
+        />
+        <p-button
+          [label]="nextLessonButtonLabel()"
+          icon="pi pi-arrow-right"
+          severity="secondary"
+          [text]="true"
+          (onClick)="openNextLesson()"
+          [disabled]="lessonGenerating() || !canOpenNextLessonAction()"
+          class="cursor-pointer"
+        />
+        <p-button
+          [label]="selectedLesson()!.status === lessonStatus.Completed ? 'Completed' : 'Submit Answer'"
+          icon="pi pi-check"
+          (onClick)="completeCurrentLesson()"
+          [disabled]="lessonGenerating() || selectedLesson()!.status === lessonStatus.Completed || submittingLessonTask()"
+          [loading]="submittingLessonTask()"
+          class="cursor-pointer"
+        />
+      </div>
+    </ng-template>
+  </p-dialog>
+}

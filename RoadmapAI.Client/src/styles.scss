@@ -1,0 +1,394 @@
+@use "tailwindcss";
+@use "primeicons/primeicons.css";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@700;800&display=swap');
+@import "prismjs/themes/prism-tomorrow.css";
+
+:root {
+  color-scheme: light;
+  --color-background: #f9f9ff;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-error-dim: #93000a;
+  --color-inverse-on-surface: #f1f0f4;
+  --color-inverse-primary: #aac7ff;
+  --color-inverse-surface: #2e3036;
+  --color-on-background: #000000;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #410002;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #001f5c;
+  --color-on-primary-fixed: #001f5c;
+  --color-on-primary-fixed-variant: #0045d4;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #002113;
+  --color-on-secondary-fixed: #002113;
+  --color-on-secondary-fixed-variant: #005234;
+  --color-on-surface: #000000;
+  --color-on-surface-variant: #44474f;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #281700;
+  --color-on-tertiary-fixed: #281700;
+  --color-on-tertiary-fixed-variant: #5f3a00;
+  --color-outline: #74777f;
+  --color-outline-variant: #c4c6d0;
+  --color-primary: #0655de;
+  --color-primary-container: #d8e2ff;
+  --color-primary-dim: #3e76fe;
+  --color-primary-fixed: #d8e2ff;
+  --color-primary-fixed-dim: #aac7ff;
+  --color-secondary: #006c45;
+  --color-secondary-container: #8bf8bf;
+  --color-secondary-dim: #6ffbbe;
+  --color-secondary-fixed: #8bf8bf;
+  --color-secondary-fixed-dim: #6ffbbe;
+  --color-surface: #f9f9ff;
+  --color-surface-bright: #f9f9ff;
+  --color-surface-container: #efedf1;
+  --color-surface-container-high: #e9e7ec;
+  --color-surface-container-highest: #e3e2e6;
+  --color-surface-container-low: #f5f3f7;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-dim: #dad9dd;
+  --color-surface-tint: #445e91;
+  --color-surface-variant: #e0e2ec;
+  --color-tertiary: #805300;
+  --color-tertiary-container: #ffddb4;
+  --color-tertiary-dim: #f8a010;
+  --color-tertiary-fixed: #ffddb4;
+  --color-tertiary-fixed-dim: #ffb148;
+  --brand-blue: #3e76fe;
+  --on-brand-blue: #ffffff;
+}
+
+.dark {
+  color-scheme: dark;
+  --color-background: #070e1d;
+  --color-error: #fa746f;
+  --color-error-container: #871f21;
+  --color-error-dim: #c54d4a;
+  --color-inverse-on-surface: #4e5566;
+  --color-inverse-primary: #0053dc;
+  --color-inverse-surface: #f9f9ff;
+  --color-on-background: #dde5ff;
+  --color-on-error: #490006;
+  --color-on-error-container: #ff9993;
+  --color-on-primary: #00389a;
+  --color-on-primary-container: #fefbff;
+  --color-on-primary-fixed: #ffffff;
+  --color-on-primary-fixed-variant: #f9f7ff;
+  --color-on-secondary: #004a31;
+  --color-on-secondary-container: #45d79c;
+  --color-on-secondary-fixed: #004930;
+  --color-on-secondary-fixed-variant: #006947;
+  --color-on-surface: #dde5ff;
+  --color-on-surface-variant: #9cabd0;
+  --color-on-tertiary: #573500;
+  --color-on-tertiary-container: #4a2c00;
+  --color-on-tertiary-fixed: #2a1700;
+  --color-on-tertiary-fixed-variant: #563400;
+  --color-outline: #667598;
+  --color-outline-variant: #394868;
+  --color-primary: #b4c5ff;
+  --color-primary-container: #0655de;
+  --color-primary-dim: #316bf3;
+  --color-primary-fixed: #3e76fe;
+  --color-primary-fixed-dim: #2d68f0;
+  --color-secondary: #4edea3;
+  --color-secondary-container: #00452d;
+  --color-secondary-dim: #3cd096;
+  --color-secondary-fixed: #6ffbbe;
+  --color-secondary-fixed-dim: #5fedb0;
+  --color-surface: #070e1d;
+  --color-surface-bright: #1c2c4a;
+  --color-surface-container: #0d1930;
+  --color-surface-container-high: #121f39;
+  --color-surface-container-highest: #152544;
+  --color-surface-container-low: #091327;
+  --color-surface-container-lowest: #000000;
+  --color-surface-dim: #070e1d;
+  --color-surface-tint: #b4c5ff;
+  --color-surface-variant: #152544;
+  --color-tertiary: #ffb148;
+  --color-tertiary-container: #f8a010;
+  --color-tertiary-dim: #e79400;
+  --color-tertiary-fixed: #f8a010;
+  --color-tertiary-fixed-dim: #e79400;
+  --brand-blue: #3e76fe;
+  --on-brand-blue: #ffffff;
+}
+.brand-badge {
+  background: var(--brand-blue);
+  color: var(--on-brand-blue);
+}
+
+.brand-badge:focus {
+  outline: 2px solid color-mix(in srgb, var(--brand-blue) 60%, black);
+  outline-offset: 2px;
+}
+
+@theme {
+  --color-primary: var(--color-primary);
+  --color-primary-container: var(--color-primary-container);
+  --color-primary-fixed: var(--color-primary-fixed);
+  --color-primary-dim: var(--color-primary-dim);
+
+  --color-secondary: var(--color-secondary);
+  --color-secondary-container: var(--color-secondary-container);
+  --color-secondary-dim: var(--color-secondary-dim);
+
+  --color-tertiary: var(--color-tertiary);
+  --color-tertiary-container: var(--color-tertiary-container);
+  --color-tertiary-dim: var(--color-tertiary-dim);
+  
+  --color-surface: var(--color-surface);
+  --color-surface-dim: var(--color-surface-dim);
+  --color-surface-bright: var(--color-surface-bright);
+  --color-surface-container-lowest: var(--color-surface-container-lowest);
+  --color-surface-container-low: var(--color-surface-container-low);
+  --color-surface-container: var(--color-surface-container);
+  --color-surface-container-high: var(--color-surface-container-high);
+  --color-surface-container-highest: var(--color-surface-container-highest);
+  --color-surface-variant: var(--color-surface-variant);
+  
+  --color-on-surface: var(--color-on-surface);
+  --color-on-surface-variant: var(--color-on-surface-variant);
+  --color-outline: var(--color-outline);
+  --color-outline-variant: var(--color-outline-variant);
+
+  --color-background: var(--color-background);
+  --color-on-background: var(--color-on-background);
+
+  --color-error: var(--color-error);
+  --color-error-container: var(--color-error-container);
+  --color-error-dim: var(--color-error-dim);
+
+  --font-sans: 'Inter', 'Montserrat', system-ui, sans-serif;
+  --font-heading: 'Montserrat', 'Inter', system-ui, sans-serif;
+
+  /* Aliases to map old static values to dynamic ones for the HTML forms */
+  --color-surface-0: var(--color-background);
+  --color-surface-50: var(--color-surface-container-lowest);
+  --color-surface-100: var(--color-on-surface);
+  --color-surface-200: var(--color-on-surface-variant);
+  --color-surface-400: var(--color-outline-variant);
+  --color-surface-700: var(--color-surface-container-highest);
+  --color-surface-800: var(--color-surface-container-high);
+  --color-surface-900: var(--color-surface-container);
+  --color-surface-950: var(--color-surface-container-low);
+  --color-primary-500: var(--color-primary);
+  --color-primary-700: var(--color-primary-dim);
+  --color-primary-900: var(--color-primary-container);
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-background);
+  color: var(--color-on-background);
+}
+
+h1, h2, h3, .font-heading {
+  font-family: var(--font-heading);
+}
+
+// Global overrides for PrimeNG to match Stitch look
+.p-button, button {
+  border-radius: 0.75rem !important; /* xl */
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+input, .p-inputtext, .p-password-input {
+  border-radius: 0.25rem !important; /* base */
+  font-family: var(--font-sans);
+  background: var(--color-surface-container-high) !important;
+  color: var(--color-on-surface) !important;
+  border: 1px solid color-mix(in srgb, var(--color-outline-variant) 50%, transparent) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:focus, .p-inputtext:focus, .p-password-input:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent) !important;
+  outline: none;
+}
+
+.p-card, .card {
+  border-radius: 0.75rem !important;
+  background: var(--color-surface-0);
+  color: var(--color-surface-100);
+}
+
+// Pointer cursor on all interactive elements
+button,
+a,
+[role="button"],
+input[type="checkbox"],
+input[type="radio"],
+select,
+.p-button,
+.p-link {
+  cursor: pointer;
+}
+
+.markdown-content {
+  color: inherit;
+  font-size: 0.925rem;
+  line-height: 1.7;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  color: var(--color-on-background);
+  font-family: var(--font-heading);
+}
+
+.markdown-content h1 {
+  font-size: 1.625rem;
+  border-b: 1px solid var(--color-outline-variant);
+  padding-bottom: 0.35rem;
+}
+
+.markdown-content h2 {
+  font-size: 1.35rem;
+  border-b: 1px solid color-mix(in srgb, var(--color-outline-variant) 40%, transparent);
+  padding-bottom: 0.25rem;
+}
+
+.markdown-content h3 {
+  font-size: 1.15rem;
+}
+
+.markdown-content p {
+  margin-top: 0;
+  margin-bottom: 0.85rem;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0.5rem 0 1rem;
+  padding-left: 1.5rem;
+  list-style-position: outside;
+}
+
+.markdown-content ul {
+  list-style-type: disc;
+}
+
+.markdown-content ol {
+  list-style-type: decimal;
+}
+
+.markdown-content li {
+  margin-bottom: 0.35rem;
+  padding-left: 0.15rem;
+}
+
+.markdown-content strong {
+  font-weight: 700;
+  color: var(--color-on-background);
+}
+
+/* Inline code blocks */
+.markdown-content :not(pre) > code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.85em;
+  background-color: var(--color-surface-container-high);
+  color: var(--color-primary-dim);
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--color-outline-variant);
+  word-break: break-all;
+}
+
+.dark .markdown-content :not(pre) > code {
+  color: var(--color-primary);
+}
+
+/* Multiline code blocks */
+.markdown-content pre {
+  margin: 0.75rem 0 1.25rem;
+  padding: 1rem;
+  background-color: var(--color-surface-container-highest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+.markdown-content pre code {
+  background-color: transparent !important;
+  color: var(--color-on-surface);
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Blockquotes */
+.markdown-content blockquote {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  border-left: 4px solid var(--color-primary);
+  background-color: var(--color-surface-container-low);
+  color: var(--color-on-surface-variant);
+  border-radius: 0 0.5rem 0.5rem 0;
+  font-style: italic;
+}
+
+/* Tables */
+.markdown-content table {
+  width: 100%;
+  margin: 1rem 0 1.5rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.markdown-content th,
+.markdown-content td {
+  padding: 0.75rem;
+  border: 1px solid var(--color-outline-variant);
+  text-align: left;
+}
+
+.markdown-content th {
+  background-color: var(--color-surface-container-high);
+  font-weight: 700;
+  color: var(--color-on-surface);
+}
+
+.markdown-content tr:nth-child(even) td {
+  background-color: var(--color-surface-container-low);
+}
+
+// Map PrimeNG's own overlay/dialog variables to our bluish theme tokens.
+// Without this, p-dialog and p-drawer render with Aura's built-in gray surface.
+.p-dialog {
+  --p-dialog-background: var(--color-surface);
+  --p-dialog-color: var(--color-on-surface);
+  --p-dialog-border-color: var(--color-outline-variant);
+  --p-dialog-header-background: var(--color-surface);
+  --p-dialog-header-color: var(--color-on-surface);
+  --p-dialog-header-border-color: var(--color-outline-variant);
+  --p-dialog-footer-background: var(--color-surface);
+  --p-dialog-footer-border-color: var(--color-outline-variant);
+}
+
+.p-drawer {
+  --p-drawer-background: var(--color-surface);
+  --p-drawer-color: var(--color-on-surface);
+  --p-drawer-border-color: var(--color-outline-variant);
+  --p-drawer-header-background: var(--color-surface);
+  --p-drawer-header-color: var(--color-on-surface);
+}

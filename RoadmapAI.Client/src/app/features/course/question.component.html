@@ -1,0 +1,77 @@
+<div class="rounded-xl border border-outline-variant bg-surface-container-high p-4 shadow-sm flex flex-col gap-3">
+  <div class="flex justify-between items-start gap-4">
+    <div class="text-base font-bold text-on-surface font-heading leading-snug">
+      @if (orderIndex()) {
+        <span class="text-primary mr-1">{{ orderIndex() }}.</span>
+      }
+      {{ questionText() }}
+    </div>
+    @if (isAiGenerated()) {
+      <span class="text-[10px] uppercase tracking-wider font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded shrink-0">
+        AI Generated
+      </span>
+    }
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
+    <button
+      type="button"
+      [class]="optionClass('A')"
+      (click)="selectOption('A')"
+      [disabled]="disabled()"
+    >
+      <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors"
+           [class]="selectedOption() === 'A' ? 'bg-white dark:bg-on-primary text-primary dark:text-primary' : 'bg-surface-container-highest text-on-surface-variant group-hover:bg-outline-variant'">
+        A
+      </div>
+      <span class="text-sm font-medium transition-colors">
+        {{ optionA() }}
+      </span>
+    </button>
+
+    <button
+      type="button"
+      [class]="optionClass('B')"
+      (click)="selectOption('B')"
+      [disabled]="disabled()"
+    >
+      <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors"
+           [class]="selectedOption() === 'B' ? 'bg-white dark:bg-on-primary text-primary dark:text-primary' : 'bg-surface-container-highest text-on-surface-variant group-hover:bg-outline-variant'">
+        B
+      </div>
+      <span class="text-sm font-medium transition-colors">
+        {{ optionB() }}
+      </span>
+    </button>
+
+    <button
+      type="button"
+      [class]="optionClass('C')"
+      (click)="selectOption('C')"
+      [disabled]="disabled()"
+    >
+      <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors"
+           [class]="selectedOption() === 'C' ? 'bg-white dark:bg-on-primary text-primary dark:text-primary' : 'bg-surface-container-highest text-on-surface-variant group-hover:bg-outline-variant'">
+        C
+      </div>
+      <span class="text-sm font-medium transition-colors">
+        {{ optionC() }}
+      </span>
+    </button>
+
+    <button
+      type="button"
+      [class]="optionClass('D')"
+      (click)="selectOption('D')"
+      [disabled]="disabled()"
+    >
+      <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors"
+           [class]="selectedOption() === 'D' ? 'bg-white dark:bg-on-primary text-primary dark:text-primary' : 'bg-surface-container-highest text-on-surface-variant group-hover:bg-outline-variant'">
+        D
+      </div>
+      <span class="text-sm font-medium transition-colors">
+        {{ optionD() }}
+      </span>
+    </button>
+  </div>
+</div>

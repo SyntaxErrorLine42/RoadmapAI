@@ -1,0 +1,184 @@
+@if (selectedExam()) {
+  <p-dialog
+    [header]="examDialogHeader()"
+    [(visible)]="visible"
+    (visibleChange)="onExamDialogVisibleChange($event)"
+    [focusOnShow]="false"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: '56rem', maxWidth: '95vw' }"
+  >
+    <div class="flex flex-col gap-4 py-2">
+      <!-- Exam Header details card -->
+      <div class="flex flex-col gap-1.5 border-b border-outline-variant/60 pb-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-bold text-on-surface font-heading leading-snug">{{ selectedExam()!.exam.title }}</h3>
+          @if (selectedExam()!.exam.isFinal) {
+            <span class="text-[10px] uppercase font-bold tracking-wider text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded">
+              Final Exam
+            </span>
+          } @else {
+            <span class="text-[10px] uppercase font-bold tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded">
+              Module Exam
+            </span>
+          }
+        </div>
+        <span class="text-xs text-on-surface-variant flex items-center gap-1.5">
+          <i class="pi pi-folder text-primary"></i>
+          <span>{{ selectedExam()!.moduleTitle }}</span>
+        </span>
+      </div>
+
+      <!-- Hint banner if completed/readonly -->
+      @if (examReadOnlyHint()) {
+        <div class="flex items-center gap-2.5 p-3.5 rounded-xl bg-primary/5 border border-primary/20 text-primary text-xs font-semibold">
+          <i class="pi pi-info-circle animate-pulse text-sm"></i>
+          <span>{{ examReadOnlyHint() }}</span>
+        </div>
+      }
+
+      <!-- Questions scrollable list container -->
+      @if (examQuestions().length > 0) {
+        <div class="max-h-[60vh] overflow-y-auto pr-1 flex flex-col gap-4">
+          @for (question of examQuestions(); track question.id) {
+            <app-question
+              [questionText]="question.questionText"
+              [optionA]="question.optionA"
+              [optionB]="question.optionB"
+              [optionC]="question.optionC"
+              [optionD]="question.optionD"
+              [orderIndex]="question.orderIndex"
+              [isAiGenerated]="question.isAiGenerated"
+              [selectedOption]="examSelections()[question.id] || null"
+              [disabled]="examReadOnly()"
+              (optionSelected)="selectExamOption(question.id, $event)"
+            />
+          }
+        </div>
+      } @else {
+        <div class="flex flex-col items-center justify-center py-16 gap-3 text-on-surface-variant font-medium">
+          <i class="pi pi-spin pi-spinner text-primary text-2xl"></i>
+          <span>Loading exam questions...</span>
+        </div>
+      }
+
+      <!-- Validation Error -->
+      @if (examError()) {
+        <div class="flex items-center gap-2 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold">
+          <i class="pi pi-exclamation-triangle text-sm"></i>
+          <span>{{ examError() }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Exam Dialog Footer Actions -->
+    <ng-template #footer>
+      <div class="flex justify-end gap-2 border-t border-outline-variant/60 pt-3 mt-1">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [text]="true"
+          (onClick)="onExamDialogVisibleChange(false)"
+          [disabled]="submittingExam()"
+          class="cursor-pointer"
+        />
+        <p-button
+          [label]="examReadOnly() ? 'Completed' : 'Submit Exam'"
+          icon="pi pi-send"
+          (onClick)="submitSelectedExam()"
+          [disabled]="examReadOnly() || examQuestions().length === 0"
+          [loading]="submittingExam()"
+          class="cursor-pointer"
+        />
+      </div>
+    </ng-template>
+  </p-dialog>
+}
+
+<!-- Exam Results Visual Dashboard Modal -->
+<p-dialog
+  header="Exam Results Dashboard"
+  [(visible)]="examResultDialogOpen"
+  (visibleChange)="onExamResultVisibleChange($event)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '34rem', maxWidth: '95vw' }"
+>
+  @if (examResult()) {
+    <div class="flex flex-col items-center text-center gap-5 py-4">
+      <!-- Score Circle indicator -->
+      <div class="relative w-28 h-28 flex items-center justify-center rounded-full border-4 shadow-md transition-all"
+           [class]="examResult()!.passed ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-red-500/30 bg-red-500/5'">
+        <div class="flex flex-col items-center">
+          <span class="text-2xl font-bold font-heading"
+                [class]="examResult()!.passed ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'">
+            {{ examResult()!.scorePercent.toFixed(0) }}%
+          </span>
+          <span class="text-[9px] uppercase tracking-wider font-bold text-on-surface-variant mt-0.5">Score</span>
+        </div>
+
+        <!-- Pass/Fail Badge -->
+        <div class="absolute -top-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center shadow-md text-white font-bold"
+             [class]="examResult()!.passed ? 'bg-emerald-500' : 'bg-red-500'">
+          <i class="pi text-xs" [class]="examResult()!.passed ? 'pi-check' : 'pi-times'"></i>
+        </div>
+      </div>
+
+      <!-- Grade Information Details -->
+      <div class="w-full bg-surface-container rounded-xl border border-outline-variant p-4 flex flex-col gap-2">
+        <div class="flex justify-between items-center text-sm">
+          <span class="text-on-surface-variant font-medium">Result Status</span>
+          <span class="font-bold uppercase tracking-wider text-xs px-2.5 py-1 rounded"
+                [class]="examResult()!.passed ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/10 text-red-500'">
+            {{ examResult()!.passed ? 'Passed (Approved)' : 'Retry Required' }}
+          </span>
+        </div>
+        <div class="flex justify-between items-center text-sm border-t border-outline-variant/60 pt-2 mt-1">
+          <span class="text-on-surface-variant font-medium">Correct Answers</span>
+          <span class="font-bold text-on-surface">
+            {{ examResult()!.correctAnswers }} / {{ examResult()!.totalQuestions }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Recommendation Feedback -->
+      <div class="text-sm text-on-surface-variant leading-relaxed max-w-sm">
+        {{ examRecommendation() }}
+      </div>
+
+      <!-- Final Exam Trophy Prompt -->
+      @if (finalExamPrompt()) {
+        <div class="flex items-center gap-2.5 p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 text-sm font-bold animate-pulse">
+          <i class="pi pi-trophy text-lg"></i>
+          <span>{{ finalExamPrompt() }}</span>
+        </div>
+      }
+
+      <!-- Focus Areas (Recommended Review Lessons) -->
+      @if (!examResult()!.passed && examResult()!.recommendedLessonTitles.length > 0) {
+        <div class="w-full text-left mt-2 flex flex-col gap-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+            <i class="pi pi-info-circle animate-pulse"></i> Focus Areas (Repeat Recommended)
+          </span>
+          <div class="max-h-36 overflow-y-auto rounded-xl border border-outline-variant/60 bg-surface-container-low p-3.5 flex flex-col gap-1.5">
+            @for (lessonTitle of examResult()!.recommendedLessonTitles; track lessonTitle) {
+              <div class="flex items-start gap-2 text-xs text-on-surface">
+                <i class="pi pi-chevron-right text-amber-500 shrink-0 mt-0.5"></i>
+                <span class="font-medium">{{ lessonTitle }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Dismiss Button -->
+      <div class="w-full mt-2">
+        <p-button
+          label="Continue"
+          (onClick)="onExamResultVisibleChange(false)"
+          class="w-full cursor-pointer"
+        />
+      </div>
+    </div>
+  }
+</p-dialog>

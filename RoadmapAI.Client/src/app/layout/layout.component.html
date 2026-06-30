@@ -1,0 +1,162 @@
+<!-- Sidebar -->
+<aside
+  class="fixed top-0 left-0 h-full bg-surface-container-high dark:bg-surface-container-low border-r border-surface-200 dark:border-surface-700 flex flex-col transition-all duration-300 z-50"
+  [class]="collapsed() ? 'w-16' : 'w-64'"
+>
+  <!-- Logo / Brand -->
+  <div class="flex items-center gap-3 px-4 h-16 border-b border-surface-200 dark:border-surface-700">
+    <div class="w-9 h-9 rounded-lg flex items-center justify-center brand-badge">
+      <i class="pi pi-compass text-base"></i>
+    </div>
+    @if (!collapsed()) {
+      <span class="font-bold text-lg text-on-surface">RoadmapAI</span>
+    }
+  </div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 flex flex-col gap-1 p-2 overflow-y-auto">
+    <a
+      routerLink="/"
+      routerLinkActive="bg-primary/10 text-primary"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 text-on-surface transition-colors"
+      [pTooltip]="collapsed() ? 'Home' : ''"
+      tooltipPosition="right"
+    >
+      <i class="pi pi-home text-lg"></i>
+      @if (!collapsed()) {
+        <span class="text-sm font-bold">Home</span>
+      }
+    </a>
+
+    <!-- Courses divider -->
+    @if (!collapsed()) {
+      <div class="flex items-center justify-between px-3 pt-4 pb-1">
+        <span class="text-xs font-semibold text-on-surface uppercase tracking-wider">Courses</span>
+        <button
+          class="text-on-surface hover:text-primary transition-colors"
+          pTooltip="Add Course"
+          tooltipPosition="right"
+          (click)="onAddCourse()"
+        >
+          <i class="pi pi-plus text-sm"></i>
+        </button>
+      </div>
+    } @else {
+      <button
+        class="flex items-center justify-center px-3 py-2.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 text-on-surface transition-colors"
+        pTooltip="Add Course"
+        tooltipPosition="right"
+        (click)="onAddCourse()"
+      >
+        <i class="pi pi-plus text-lg"></i>
+      </button>
+    }
+
+    <!-- Course list -->
+    @if (!collapsed()) {
+      @for (course of sortedCourses(); track course.id) {
+        <a
+          [routerLink]="['/courses', course.id]"
+          routerLinkActive="bg-primary/10 text-primary"
+          class="flex items-center justify-between gap-3 px-3 py-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 text-on-surface transition-colors"
+          [pTooltip]="course.name"
+          tooltipPosition="right"
+        >
+          <div class="flex items-center gap-3 min-w-0">
+            <i class="pi pi-graduation-cap text-sm"></i>
+            <span class="text-sm font-bold truncate">{{ course.name }}</span>
+          </div>
+          <span class="text-[10px] font-bold text-on-surface">{{ course.completionPercent }}%</span>
+        </a>
+      } @empty {
+        <p class="px-3 py-2 text-xs text-surface-400 italic">No courses yet</p>
+      }
+    }
+  </nav>
+
+  <!-- Bottom section: Theme toggle + Profile -->
+  <div class="border-t border-surface-200 dark:border-surface-700 p-2 flex flex-col gap-1">
+    <!-- Dark mode toggle -->
+    <button
+      class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-200 transition-colors w-full"
+      [pTooltip]="collapsed() ? (theme.isDark() ? 'Light Mode' : 'Dark Mode') : ''"
+      tooltipPosition="right"
+      (click)="theme.toggle()"
+      [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+    >
+      <i class="text-lg" [class]="theme.isDark() ? 'pi pi-sun' : 'pi pi-moon'"></i>
+      @if (!collapsed()) {
+        <span class="text-sm font-medium">{{ theme.isDark() ? 'Light Mode' : 'Dark Mode' }}</span>
+      }
+    </button>
+
+    <!-- Collapse toggle -->
+    <button
+      class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-200 transition-colors w-full"
+      [pTooltip]="collapsed() ? 'Expand' : ''"
+      tooltipPosition="right"
+      (click)="collapsed.update(v => !v)"
+      [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+    >
+      <i class="text-lg" [class]="collapsed() ? 'pi pi-angle-right' : 'pi pi-angle-left'"></i>
+      @if (!collapsed()) {
+        <span class="text-sm font-medium">Collapse</span>
+      }
+    </button>
+
+    <!-- Profile -->
+    <button
+      class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-700 dark:text-surface-200 transition-colors w-full"
+      [pTooltip]="collapsed() ? 'Profile' : ''"
+      tooltipPosition="right"
+      (click)="profileMenuOpen.set(true)"
+      aria-label="Open profile menu"
+    >
+      <i class="pi pi-user text-lg"></i>
+      @if (!collapsed()) {
+        <span class="text-sm font-medium truncate">{{ auth.user()?.displayName || 'Profile' }}</span>
+      }
+    </button>
+  </div>
+</aside>
+
+<!-- Profile Drawer (slides out from left) -->
+<p-drawer
+  [(visible)]="profileMenuOpen"
+  header="Profile"
+  position="left"
+  [style]="{ width: '20rem' }"
+>
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-1">
+      <span class="text-sm text-surface-400">Email</span>
+      <span class="font-medium text-surface-900 dark:text-surface-0">{{ auth.user()?.email }}</span>
+    </div>
+    <div class="flex flex-col gap-1">
+      <span class="text-sm text-surface-400">Display Name</span>
+      <span class="font-medium text-surface-900 dark:text-surface-0">{{ auth.user()?.displayName }}</span>
+    </div>
+    <hr class="border-surface-200 dark:border-surface-700">
+    <p-button
+      label="Sign Out"
+      icon="pi pi-sign-out"
+      severity="danger"
+      [text]="true"
+      (onClick)="auth.logout()"
+    />
+  </div>
+</p-drawer>
+
+<!-- Main content area -->
+<main
+  class="transition-all duration-300 min-h-screen bg-background"
+  [class]="collapsed() ? 'ml-16' : 'ml-64'"
+>
+  <div class="p-6">
+    <router-outlet />
+  </div>
+</main>
+
+<!-- Create Course Dialog -->
+<app-create-course-dialog (created)="onCourseCreated($event)" />

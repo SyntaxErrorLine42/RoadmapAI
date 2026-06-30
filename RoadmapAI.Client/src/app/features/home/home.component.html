@@ -1,0 +1,185 @@
+<div class="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
+  <!-- Page Header -->
+  <header>
+    <h1 class="font-headline text-3xl font-bold text-on-surface tracking-tight">Home</h1>
+  </header>
+
+  <!-- Top Stat Cards (Bento style) -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Card 1: Total Courses -->
+    <div class="bg-surface-container dark:bg-surface-container-high rounded-xl p-6 shadow-sm flex flex-col justify-between border border-outline-variant/30 relative overflow-hidden group">
+      <div class="absolute -right-6 -top-6 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors"></div>
+      <div class="flex justify-between items-start mb-6 z-10">
+        <div>
+          <h3 class="font-body text-sm font-medium text-on-surface-variant uppercase tracking-wider mb-1">Total Courses</h3>
+          <div class="flex items-baseline gap-2">
+            <span class="font-headline text-4xl font-black text-on-surface">{{ courseService.courses().length }}</span>
+            <span class="font-body text-xs text-secondary-dim font-medium">overall</span>
+          </div>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-surface-variant flex items-center justify-center text-primary">
+          <i class="pi pi-book text-xl"></i>
+        </div>
+      </div>
+      <button (click)="openCreateDialog()" class="cursor-pointer z-10 w-full py-2.5 px-4 bg-primary-container/20 text-primary-dim font-body text-sm font-semibold rounded-xl hover:bg-primary-container/30 transition-colors flex items-center justify-center gap-2 border border-primary/20">
+        <i class="pi pi-plus text-sm"></i> Add Course
+      </button>
+    </div>
+
+    <!-- Card 2: Recent Activity -->
+    <div class="bg-surface-container dark:bg-surface-container-high rounded-xl p-6 shadow-sm flex flex-col justify-between border border-outline-variant/30 relative overflow-hidden group">
+      <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-secondary/5 rounded-full blur-2xl group-hover:bg-secondary/10 transition-colors"></div>
+      <div class="flex justify-between items-start mb-4 z-10">
+        <div>
+          <h3 class="font-body text-sm font-medium text-on-surface-variant uppercase tracking-wider mb-1">Recent Activity</h3>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-surface-variant flex items-center justify-center text-secondary-dim">
+          <i class="pi pi-history text-xl"></i>
+        </div>
+      </div>
+      <div class="z-10 mt-auto bg-surface dark:bg-surface-container rounded-xl p-4 border border-outline-variant/20">
+        <h4 class="font-headline text-base font-bold text-on-surface leading-tight mb-1 truncate">{{ latestCourse()?.name || 'No recent activity' }}</h4>
+        <div class="flex items-center gap-2 text-xs text-on-surface-variant">
+          <i class="pi pi-clock text-sm"></i>
+          <span>{{ latestCourse() ? ('Created ' + (latestCourse()!.createdAt | date:'mediumDate')) : 'Get started by creating a course' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Study Goal -->
+    <div class="bg-surface-container dark:bg-surface-container-high rounded-xl p-6 shadow-sm flex flex-col justify-between border border-outline-variant/30 relative overflow-hidden group">
+      <div class="absolute -left-6 -top-6 w-32 h-32 bg-tertiary/5 rounded-full blur-2xl group-hover:bg-tertiary/10 transition-colors"></div>
+      <div class="flex justify-between items-start mb-6 z-10">
+        <div>
+          <h3 class="font-body text-sm font-medium text-on-surface-variant uppercase tracking-wider mb-1">Study Goal</h3>
+          <div class="flex items-baseline gap-2">
+            <span class="font-headline text-4xl font-black text-on-surface">{{ averageCompletion() }}%</span>
+            <span class="font-body text-xs text-on-surface-variant font-medium">overall avg.</span>
+          </div>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-surface-variant flex items-center justify-center text-tertiary-dim">
+          <i class="pi pi-bullseye text-xl"></i>
+        </div>
+      </div>
+      <div class="z-10 w-full mt-auto">
+        <div class="flex justify-between text-xs text-on-surface-variant mb-2 font-medium">
+          <span>Average completion</span>
+          <span>100% goal</span>
+        </div>
+        <div class="w-full bg-surface-variant rounded-full h-2.5 overflow-hidden">
+          <div class="h-2.5 rounded-full transition-all duration-500" [style.width.%]="averageCompletion()" [style.backgroundColor]="getProgressBarColor(averageCompletion())"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Area: My Courses -->
+  <section class="mt-8">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="font-headline text-xl font-bold text-on-surface flex items-center gap-2">
+        <i class="pi pi-bookmark text-primary"></i>
+        My Courses
+      </h2>
+      <button (click)="openCreateDialog()" class="cursor-pointer text-sm font-medium text-primary hover:text-primary-dim transition-colors flex items-center gap-1">
+        Add New <i class="pi pi-plus text-sm"></i>
+      </button>
+    </div>
+
+    @if (coursesByPriority().length === 0) {
+      <div class="bg-surface-container dark:bg-surface-container-high rounded-xl p-8 border border-outline-variant/30 text-center shadow-sm">
+        <div class="w-16 h-16 rounded-full bg-primary-container/20 flex items-center justify-center mx-auto mb-4">
+          <i class="pi pi-inbox text-primary text-3xl"></i>
+        </div>
+        <h3 class="font-headline text-lg font-bold text-on-surface mb-2">No courses yet</h3>
+        <p class="text-on-surface-variant font-body mb-6">Create your first course to start learning and tracking your progress.</p>
+        <button (click)="openCreateDialog()" class="cursor-pointer px-6 py-2.5 bg-primary-fixed text-on-primary-fixed font-headline font-semibold rounded-xl hover:bg-primary-fixed-dim transition-colors inline-flex items-center gap-2 shadow-sm">
+          <i class="pi pi-plus text-sm"></i> Add Course
+        </button>
+      </div>
+    } @else {
+      <div class="bg-surface-container dark:bg-surface-container-high rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-variant/50 border-b border-outline-variant/50">
+                <th class="py-4 px-6 font-headline text-sm font-semibold text-on-surface-variant tracking-wide">Course Name</th>
+                <th class="py-4 px-6 font-headline text-sm font-semibold text-on-surface-variant tracking-wide w-1/3">Progress</th>
+                <th class="py-4 px-6 font-headline text-sm font-semibold text-on-surface-variant tracking-wide">Status</th>
+                <th class="py-4 px-6 font-headline text-sm font-semibold text-on-surface-variant tracking-wide text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/30">
+              @for (course of coursesByPriority(); track course.id) {
+                <tr class="hover:bg-surface-container-highest/50 transition-colors group cursor-pointer" [routerLink]="['/courses', course.id]">
+                  <td class="py-4 px-6">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary shrink-0 group-hover:bg-primary-container/20 group-hover:text-primary-dim transition-colors">
+                        <i class="pi pi-graduation-cap text-xl"></i>
+                      </div>
+                      <div>
+                        <div class="font-headline font-bold text-on-surface text-base group-hover:text-primary transition-colors">{{ course.name }}</div>
+                        <div class="text-xs text-on-surface-variant font-body">{{ course.materialCount }} {{ course.materialCount === 1 ? 'file' : 'files' }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="py-4 px-6">
+                    <div class="flex items-center gap-3">
+                      <div class="flex-1 bg-surface-variant rounded-full h-2 overflow-hidden">
+                        <div class="h-2 rounded-full transition-all duration-500"
+                             [style.width.%]="course.completionPercent"
+                             [style.backgroundColor]="getProgressBarColor(course.completionPercent)"></div>
+                      </div>
+                      <span class="text-sm font-medium text-on-surface font-body w-8">{{ course.completionPercent }}%</span>
+                    </div>
+                  </td>
+                  <td class="py-4 px-6">
+                    @switch (course.status) {
+                      @case ('Completed') {
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-variant text-on-surface-variant border border-outline-variant/50">
+                          <i class="pi pi-check-circle text-sm"></i>
+                          Completed
+                        </span>
+                      }
+                      @case ('Processing') {
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary-dim border border-primary/20">
+                          <i class="pi pi-spin pi-spinner text-xs"></i>
+                          Processing
+                        </span>
+                      }
+                      @case ('RoadmapGenerating') {
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary-dim border border-primary/20">
+                          <i class="pi pi-spin pi-spinner text-xs"></i>
+                          Generating
+                        </span>
+                      }
+                      @case ('Error') {
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-error-container/10 text-error-dim border border-error/20">
+                          <i class="pi pi-exclamation-circle text-sm"></i>
+                          Error
+                        </span>
+                      }
+                      @default {
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-secondary/10 text-secondary-dim border border-secondary/20">
+                          <span class="w-1.5 h-1.5 rounded-full bg-secondary-dim"></span>
+                          Ready
+                        </span>
+                      }
+                    }
+                  </td>
+                  <td class="py-4 px-6 text-right">
+                    <button class="cursor-pointer px-4 py-2 bg-surface dark:bg-surface-container border border-outline-variant text-on-surface font-body text-sm font-medium rounded-xl transition-all shadow-sm group-hover:bg-primary-fixed group-hover:text-on-primary-fixed group-hover:border-primary-fixed hover:bg-primary-fixed-dim hover:text-on-primary-fixed hover:border-primary-fixed-dim">
+                      {{ course.completionPercent >= 100 ? 'Review' : 'Open Roadmap' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </section>
+</div>
+
+<!-- Create Course Dialog (for dashboard "Add Course" button) -->
+<app-create-course-dialog (created)="onCourseCreated($event)" />

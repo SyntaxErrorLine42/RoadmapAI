@@ -1,0 +1,614 @@
+@if (course()) {
+  <div class="w-full pb-12">
+    <!-- Top Header Area -->
+    <!-- Top Header Area -->
+    <header class="bg-surface sticky top-0 z-40 border-b border-outline-variant px-8 py-6 flex flex-col xl:flex-row gap-6 justify-between xl:items-center -mx-6 -mt-6 mb-8">
+      <div class="flex items-center gap-6 w-full xl:w-1/2">
+        <div>
+          <div class="flex items-center gap-3 mb-1">
+            <h2 class="text-3xl font-bold text-on-surface">{{ course()!.name }}</h2>
+            <button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer" (click)="openRenameDialog()" aria-label="Rename course">
+              <i class="pi pi-file-edit text-xl"></i>
+            </button>
+            <button class="text-on-surface-variant hover:text-red-500 transition-colors cursor-pointer" (click)="deleteDialogOpen.set(true)" aria-label="Delete course">
+              <i class="pi pi-trash text-xl"></i>
+            </button>
+            <span class="text-[10px] ml-2 px-2 py-1 font-bold tracking-wider uppercase rounded border"
+                  [class]="course()!.status === courseStatus.Error ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-surface-container-high text-on-surface-variant border-outline'">
+              {{ course()!.status }}
+            </span>
+          </div>
+          <div class="flex items-center gap-4 mt-3">
+            <div class="w-64 h-2 bg-surface-container-highest rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all" [class]="completionColorClass(roadmapStats().completionPercent)" [style.width.%]="roadmapStats().completionPercent"></div>
+            </div>
+            <span class="text-sm text-on-surface-variant font-medium">{{ roadmapStats().completionPercent }}% Complete</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-3 xl:justify-end w-full xl:w-auto">
+        <!-- Hidden input for Add files -->
+        <input #addFileInput type="file" [accept]="accepted" multiple class="hidden" (change)="onAddFilesChange($event)" aria-hidden="true" />
+
+        <p-button label="Generate Review" icon="pi pi-comments" severity="secondary" [text]="true" (onClick)="generateReview()" [loading]="reviewGenerating()" />
+        <p-button label="Generate Roadmap" icon="pi pi-sitemap" severity="secondary" [text]="true" (onClick)="generateRoadmap()" [disabled]="!canGenerateRoadmap() || roadmapGenerating()" [loading]="roadmapGenerating()" [hidden]="!canGenerateRoadmap()" />
+        <p-button label="Reset Course" icon="pi pi-refresh" severity="danger" [text]="true" (onClick)="resetDialogOpen.set(true)" />
+        <p-button [label]="startButtonLabel()" icon="pi pi-play" (onClick)="startOrContinueCourse()" [disabled]="!nextLessonToStudy()" />
+      </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto w-full space-y-8">
+      @if (course()!.status === courseStatus.Processing || ingesting()) {
+        <div class="rounded-xl border border-outline-variant bg-surface p-5 flex flex-col gap-2">
+          <div class="flex justify-between text-sm font-medium text-on-surface-variant">
+            <span>Extracting materials…</span>
+            <span>{{ ingestPercent() }}%</span>
+          </div>
+          <p-progressbar [value]="ingestPercent()" [style]="{ height: '6px' }" [showValue]="false" />
+        </div>
+      }
+
+      @if (uploadingFiles()) {
+        <div class="rounded-xl border border-outline-variant bg-surface p-5 flex flex-col gap-2 mt-4">
+          <div class="flex justify-between text-sm font-medium text-on-surface-variant">
+            <span>Uploading new materials…</span>
+            <span>{{ uploadPercent() }}%</span>
+          </div>
+          <p-progressbar [value]="uploadPercent()" [style]="{ height: '6px' }" [showValue]="false" />
+        </div>
+      }
+
+      @if (course()!.roadmap) {
+        <div class="space-y-8">
+          <!-- Stats Row -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-surface-container-high p-4 rounded-xl border border-outline-variant flex flex-col items-center justify-center text-center">
+              <i class="pi pi-folder text-primary mb-2 text-3xl"></i>
+              <span class="font-bold text-xl text-on-surface">{{ roadmapStats().materials }}</span>
+              <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mt-1">Materials</span>
+            </div>
+            <div class="bg-surface-container-high p-4 rounded-xl border border-outline-variant flex flex-col items-center justify-center text-center">
+              <i class="pi pi-book text-emerald-500 dark:text-emerald-400 mb-2 text-3xl"></i>
+              <span class="font-bold text-xl text-on-surface">{{ roadmapStats().completedLessons }}/{{ roadmapStats().totalLessons }}</span>
+              <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mt-1">Lessons Done</span>
+            </div>
+            <div class="bg-surface-container-high p-4 rounded-xl border border-outline-variant flex flex-col items-center justify-center text-center">
+              <i class="pi pi-check-square text-amber-500 dark:text-amber-400 mb-2 text-3xl"></i>
+              <span class="font-bold text-xl text-on-surface">{{ roadmapStats().completedExams }}/{{ roadmapStats().totalExams }}</span>
+              <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mt-1">Exams Done</span>
+            </div>
+            <div class="bg-surface-container-high p-4 rounded-xl border border-outline-variant flex flex-col items-center justify-center text-center">
+              <i class="pi pi-map text-primary mb-2 text-3xl"></i>
+              <span class="font-bold text-sm text-on-surface mb-1">{{ course()!.status === courseStatus.RoadmapReady ? 'Ready' : 'Progressing' }}</span>
+              <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Roadmap</span>
+            </div>
+          </div>
+
+          <!-- Course Summary Panel Row -->
+          <div class="grid grid-cols-1 gap-8">
+            <div class="bg-surface p-6 rounded-xl border border-outline-variant shadow-sm">
+              <h3 class="font-bold text-lg mb-4 text-on-surface border-b border-outline-variant pb-2">Course Summary</h3>
+              <div class="markdown-content break-words text-sm text-on-surface-variant leading-relaxed font-sans" [innerHTML]="renderMarkdown(courseSummaryHtml() || 'Course overview will appear here after roadmap generation.')"></div>
+            </div>
+          </div>
+
+          <!-- Secondary Info Panes Row -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Source Materials -->
+            <div class="bg-surface p-6 rounded-xl border border-outline-variant h-[300px] shadow-sm flex flex-col">
+              <div class="flex justify-between items-center mb-4 border-b border-outline-variant pb-2 flex-shrink-0">
+                <h3 class="font-bold text-lg text-on-surface">Source Materials</h3>
+                <div class="flex items-center gap-2">
+                  <button class="text-primary hover:text-primary-dim transition-colors cursor-pointer flex items-center justify-center p-1 rounded hover:bg-surface-container-high"
+                          (click)="addFileInput.click()" title="Add Materials">
+                    <i class="pi pi-plus text-lg"></i>
+                  </button>
+                  <button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer flex items-center justify-center p-1 rounded hover:bg-surface-container-high"
+                          (click)="filesDialogOpen.set(true)" title="View Details">
+                    <i class="pi pi-info-circle text-lg"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="flex-1 overflow-y-auto pr-2 space-y-3">
+                @for (material of course()!.materials; track material.id) {
+                  <div class="flex items-center justify-between p-3 bg-surface-container-high rounded-lg">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                      <i [class]="fileIcon(material.originalFileName) + ' text-on-surface-variant'"></i>
+                      <span class="text-sm font-medium text-on-surface-variant truncate">{{ material.originalFileName }}</span>
+                    </div>
+                    <span class="px-2 py-1 ml-2 text-[10px] font-bold uppercase tracking-wider rounded border flex-shrink-0" [class]="materialStatusClass(material.status)">{{ material.status }}</span>
+                  </div>
+                } @empty {
+                  <p class="text-xs text-on-surface-variant">No materials uploaded.</p>
+                }
+              </div>
+            </div>
+
+            <!-- Recent Exam Attempts -->
+            <div class="bg-surface p-6 rounded-xl border border-outline-variant h-[300px] shadow-sm flex flex-col">
+              <h3 class="font-bold text-lg text-on-surface mb-4 border-b border-outline-variant pb-2 flex-shrink-0">Recent Exam Attempts</h3>
+              <div class="flex-1 overflow-y-auto pr-2 space-y-3">
+                @if (examAttempts().length > 0) {
+                  @for (attempt of examAttempts(); track attempt.id) {
+                    <div class="flex items-center justify-between p-3 bg-surface-container-high rounded-lg">
+                      <div class="flex flex-col min-w-0">
+                        <span class="text-sm font-medium text-on-surface-variant truncate">{{ attempt.examTitle }}</span>
+                        <span class="text-xs text-on-surface-variant truncate">{{ attempt.moduleTitle }} · {{ examAttemptDate(attempt.submittedAt) }}</span>
+                      </div>
+                      <div class="flex flex-col items-end flex-shrink-0 ml-4">
+                        <span class="text-sm font-bold" [class]="attempt.passed ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'">{{ attempt.scorePercent.toFixed(2) }}%</span>
+                        <button class="text-xs text-primary hover:underline cursor-pointer mt-1" (click)="viewExamAttempt(attempt.id)">View</button>
+                      </div>
+                    </div>
+                  }
+                } @else {
+                  <p class="text-xs text-on-surface-variant">No attempts yet.</p>
+                }
+              </div>
+            </div>
+
+            <!-- Past Reviews -->
+            <div class="bg-surface p-6 rounded-xl border border-outline-variant h-[300px] shadow-sm flex flex-col">
+              <h3 class="font-bold text-lg text-on-surface mb-4 border-b border-outline-variant pb-2 flex-shrink-0">Past Reviews</h3>
+              <div class="flex-1 overflow-y-auto pr-2 space-y-3">
+                @if (courseReviews().length > 0) {
+                  @for (review of courseReviews(); track review.id) {
+                    <div class="flex items-center justify-between p-3 bg-surface-container-high rounded-lg">
+                      <div class="flex flex-col min-w-0">
+                        <span class="text-sm font-medium text-on-surface truncate">{{ examAttemptDate(review.createdAt) }}</span>
+                      </div>
+                      <button class="text-xs text-primary hover:underline cursor-pointer flex-shrink-0 ml-4" (click)="openReview(review.id)">View</button>
+                    </div>
+                  }
+                } @else {
+                  <p class="text-xs text-on-surface-variant">No reviews yet.</p>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Section: Full Width Learning Roadmap -->
+          <div class="bg-surface rounded-xl border border-outline-variant p-8 shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+              <h3 class="text-2xl font-bold text-on-surface">Learning Roadmap</h3>
+              <button class="px-4 py-2 border border-outline-variant text-on-surface-variant rounded-lg text-sm font-medium hover:bg-surface-container-high transition-colors flex items-center gap-2 cursor-pointer" (click)="generateRoadmap()" [disabled]="!canGenerateRoadmap() || roadmapGenerating()">
+                <i class="pi pi-refresh text-sm"></i> Refresh Roadmap
+              </button>
+            </div>
+
+            <div class="relative pl-6">
+              @if (course()!.roadmap!.modules.length > 0) {
+                @for (module of sortedModules(); track module.id; let isLastModule = $last) {
+                  <div class="relative z-10 mb-12">
+                    <div class="flex items-start gap-6" [class.opacity-60]="isLessonLocked(module)">
+                      @if (!isLastModule || finalExamContext()) {
+                        <div class="absolute left-4 top-9 bottom-[-52px] w-px bg-surface-container-highest z-0"></div>
+                      }
+
+                      <!-- Circle Indicator -->
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 shadow-sm z-10"
+                           [class]="moduleAllLessonsCompleted(module) ? 'bg-emerald-100 dark:bg-emerald-900/30 border-2 border-emerald-500 text-emerald-500' : (!isLessonLocked(module) ? 'bg-surface border-2 border-primary text-primary shadow-[0_0_10px_rgba(49,107,243,0.3)]' : 'bg-surface-container-high border-2 border-outline text-on-surface-variant')">
+                        @if (moduleAllLessonsCompleted(module)) {
+                          <i class="pi pi-check text-xs font-bold"></i>
+                        } @else if (!isLessonLocked(module)) {
+                          <div class="w-2.5 h-2.5 rounded-full bg-primary"></div>
+                        } @else {
+                          <i class="pi pi-lock text-xs"></i>
+                        }
+                      </div>
+
+                      <div class="flex-1 bg-surface-container-high rounded-xl p-6 border transition-all"
+                           [class]="moduleAllLessonsCompleted(module) ? 'border-emerald-500/30 shadow-md' : (!isLessonLocked(module) ? 'border-primary/40 shadow-lg ring-1 ring-primary/20' : 'border-outline-variant border-dashed')">
+
+                        <div class="flex justify-between items-start mb-4">
+                          <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider mb-1 block"
+                                  [class]="moduleAllLessonsCompleted(module) ? 'text-emerald-600 dark:text-emerald-400' : (!isLessonLocked(module) ? 'text-primary' : 'text-on-surface-variant')">
+                              Module {{ module.orderIndex }}
+                            </span>
+                            <h4 class="text-xl font-bold text-on-surface">{{ module.title }}</h4>
+                          </div>
+
+                          @if (!isLessonLocked(module) || moduleAllLessonsCompleted(module)) {
+                            <div class="text-right">
+                              <span class="text-xs font-bold block mb-1" [class]="moduleAllLessonsCompleted(module) ? 'text-emerald-600 dark:text-emerald-400' : 'text-primary'">{{ moduleProgressPercent(module) }}%</span>
+                              <div class="w-24 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+                                <div class="h-full rounded-full transition-all"
+                                     [class]="moduleAllLessonsCompleted(module) ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-primary'"
+                                     [style.width.%]="moduleProgressPercent(module)"></div>
+                              </div>
+                            </div>
+                          } @else {
+                            <span class="text-xs text-on-surface-variant px-3 py-1 bg-surface-container-highest rounded-full">Locked</span>
+                          }
+                        </div>
+                        <div class="flex flex-col gap-y-2 mt-4 pl-2 border-l-2"
+                             [class]="moduleAllLessonsCompleted(module) ? 'border-emerald-500/30' : (!isLessonLocked(module) ? 'border-primary/30' : 'border-outline-variant')">
+
+                          <!-- Lessons list -->
+                          @for (lesson of sortedLessons(module); track lesson.id) {
+                            <button class="flex items-center gap-3 p-2 rounded-lg transition-colors group text-left w-full cursor-pointer"
+                                    [class]="lesson.status === lessonStatus.Completed || lesson.status === lessonStatus.Generated ? 'hover:bg-surface-container-highest' : (lesson.id === nextLessonToStudy()?.id ? 'bg-primary/10 border border-primary/20 hover:bg-primary/20' : 'hover:bg-surface-container-highest opacity-50')"
+                                    (click)="openLesson(lesson)"
+                                    [disabled]="isLessonLocked(module) && lesson.status !== lessonStatus.Completed && lesson.status !== lessonStatus.Generated && lesson.id !== nextLessonToStudy()?.id">
+                              <span class="text-[10px] font-bold w-4 text-center"
+                                    [class]="lesson.id === nextLessonToStudy()?.id ? 'text-primary' : 'text-on-surface-variant'">{{ lesson.orderIndex }}</span>
+
+                              @if (lesson.status === lessonStatus.Completed) {
+                                <i class="pi pi-check-circle text-emerald-500 dark:text-emerald-400 text-sm"></i>
+                                <span class="text-sm font-medium text-on-surface line-through opacity-70 truncate flex-1">{{ lesson.title }}</span>
+                              } @else if (lesson.status === lessonStatus.Generated) {
+                                <i class="pi pi-check-circle text-emerald-500 dark:text-emerald-400 text-sm"></i>
+                                <span class="text-sm font-medium text-on-surface truncate flex-1">{{ lesson.title }}</span>
+                              } @else if (lesson.id === nextLessonToStudy()?.id) {
+                                <i class="pi pi-play-circle text-primary text-sm"></i>
+                                <span class="text-sm font-semibold text-primary truncate flex-1">{{ lesson.title }}</span>
+                                <span class="ml-auto text-[10px] uppercase font-bold text-primary bg-primary/20 px-2 py-0.5 rounded flex-shrink-0">Current</span>
+                              } @else {
+                                <i class="pi pi-lock text-on-surface-variant text-sm"></i>
+                                <span class="text-sm font-medium text-on-surface truncate flex-1">{{ lesson.title }}</span>
+                              }
+                            </button>
+                          }
+
+                          <!-- Exams list -->
+                          @for (exam of sortedExams(module); track exam.id) {
+                            <button class="flex items-center gap-3 p-3 rounded-lg mt-2 transition-colors text-left w-full cursor-pointer"
+                                    [class]="exam.status === 'Completed' ? 'bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20' : (!isExamLocked(exam, module) ? 'bg-primary/10 border border-primary/20 hover:bg-primary/20' : 'bg-surface-container-high border border-outline opacity-50')"
+                                    (click)="openExam(exam, module)"
+                                    [disabled]="isExamLocked(exam, module)">
+
+                              <i class="pi pi-file-edit" [class]="exam.status === 'Completed' ? 'text-emerald-500 dark:text-emerald-400' : (!isExamLocked(exam, module) ? 'text-primary' : 'text-on-surface-variant')"></i>
+
+                              <span class="text-sm font-bold truncate flex-1"
+                                    [class]="exam.status === 'Completed' ? 'text-emerald-600 dark:text-emerald-400' : (!isExamLocked(exam, module) ? 'text-primary' : 'text-on-surface')">
+                                {{ exam.title }}
+                                @if (exam.isFinal) {
+                                  <span class="text-[10px] ml-2 px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-500 uppercase tracking-wider align-middle inline-block -mt-0.5">Final</span>
+                                }
+                              </span>
+
+                              @if (exam.status === 'Completed') {
+                                <span class="ml-auto text-xs text-emerald-600 dark:text-emerald-400 font-bold">Passed</span>
+                              } @else if (!isExamLocked(exam, module)) {
+                                <span class="ml-auto text-[10px] uppercase font-bold text-primary bg-primary/20 px-2 py-0.5 rounded flex-shrink-0">Available</span>
+                              } @else {
+                                <i class="pi pi-lock text-sm text-on-surface-variant"></i>
+                              }
+                            </button>
+                          }
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+
+                @if (finalExamContext(); as ctx) {
+                  <div class="relative z-10">
+                    <div class="flex items-start gap-6" [class.opacity-60]="isExamLocked(ctx.exam, ctx.module)">
+
+                      <!-- Circle Indicator -->
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 shadow-sm z-10"
+                           [class]="ctx.exam.status === 'Completed' ? 'bg-emerald-100 dark:bg-emerald-900/30 border-2 border-emerald-500 text-emerald-500' : (!isExamLocked(ctx.exam, ctx.module) ? 'bg-surface border-2 border-primary text-primary shadow-[0_0_10px_rgba(49,107,243,0.3)]' : 'bg-surface-container-high border-2 border-outline text-on-surface-variant')">
+                        @if (ctx.exam.status === 'Completed') {
+                          <i class="pi pi-check text-xs font-bold"></i>
+                        } @else if (!isExamLocked(ctx.exam, ctx.module)) {
+                          <div class="w-2.5 h-2.5 rounded-full bg-primary"></div>
+                        } @else {
+                          <i class="pi pi-lock text-xs"></i>
+                        }
+                      </div>
+
+                      <!-- Exam Card -->
+                      <div class="flex-1 bg-surface-container-high rounded-xl p-6 border transition-all"
+                           [class]="ctx.exam.status === 'Completed' ? 'border-emerald-500/30 shadow-md' : (!isExamLocked(ctx.exam, ctx.module) ? 'border-primary/40 shadow-lg ring-1 ring-primary/20' : 'border-outline-variant border-dashed')">
+
+                        <div class="flex justify-between items-start mb-4">
+                          <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider mb-1 block"
+                                  [class]="ctx.exam.status === 'Completed' ? 'text-emerald-600 dark:text-emerald-400' : (!isExamLocked(ctx.exam, ctx.module) ? 'text-primary' : 'text-on-surface-variant')">
+                              Final Exam
+                            </span>
+                            <!-- <h4 class="text-xl font-bold text-on-surface">{{ ctx.exam.title }}</h4> -->
+                          </div>
+                          @if (isExamLocked(ctx.exam, ctx.module)) {
+                            <span class="text-xs text-on-surface-variant px-3 py-1 bg-surface-container-highest rounded-full">Locked</span>
+                          } @else if (ctx.exam.status === 'Completed') {
+                            <span class="text-xs text-emerald-600 dark:text-emerald-400 px-3 py-1 bg-emerald-500/10 rounded-full font-bold">Passed</span>
+                          } @else {
+                            <span class="text-xs text-primary px-3 py-1 bg-primary/10 rounded-full font-bold">Available</span>
+                          }
+                        </div>
+
+                        <div class="mt-4">
+                          <button class="flex items-center gap-3 p-3 rounded-lg transition-colors text-left w-full cursor-pointer"
+                                  [class]="ctx.exam.status === 'Completed' ? 'bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20' : (!isExamLocked(ctx.exam, ctx.module) ? 'bg-primary/10 border border-primary/20 hover:bg-primary/20' : 'bg-surface-container-high border border-outline opacity-50')"
+                                  (click)="openExam(ctx.exam, ctx.module)"
+                                  [disabled]="isExamLocked(ctx.exam, ctx.module)">
+
+                            <i class="pi pi-file-edit" [class]="ctx.exam.status === 'Completed' ? 'text-emerald-500 dark:text-emerald-400' : (!isExamLocked(ctx.exam, ctx.module) ? 'text-primary' : 'text-on-surface-variant')"></i>
+
+                            <span class="text-sm font-bold truncate flex-1"
+                                  [class]="ctx.exam.status === 'Completed' ? 'text-emerald-600 dark:text-emerald-400' : (!isExamLocked(ctx.exam, ctx.module) ? 'text-primary' : 'text-on-surface')">
+                              {{ ctx.exam.title }}
+                              <span class="text-[10px] ml-2 px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-500 uppercase tracking-wider align-middle inline-block -mt-0.5">Final</span>
+                            </span>
+
+                            @if (ctx.exam.status === 'Completed') {
+                              <span class="ml-auto text-xs text-emerald-600 dark:text-emerald-400 font-bold">Passed</span>
+                            } @else if (!isExamLocked(ctx.exam, ctx.module)) {
+                              <span class="ml-auto text-[10px] uppercase font-bold text-primary bg-primary/20 px-2 py-0.5 rounded flex-shrink-0">Available</span>
+                            } @else {
+                              <i class="pi pi-lock text-sm text-on-surface-variant"></i>
+                            }
+                          </button>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                }
+              } @else {
+                <div class="relative z-10 rounded-xl border border-dashed border-outline p-8 text-center bg-surface-container-high">
+                  <i class="pi pi-sparkles text-3xl text-on-surface-variant mb-3"></i>
+                  <p class="text-on-surface-variant">Roadmap will appear here after you click Generate Roadmap.</p>
+                </div>
+              }
+
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="mt-12">
+          <div class="rounded-xl border border-dashed border-outline p-12 text-center bg-surface shadow-sm">
+            <i class="pi pi-sparkles text-4xl text-on-surface-variant mb-4"></i>
+            <h3 class="text-xl font-bold text-on-surface mb-2">Ready to create your learning path</h3>
+            <p class="text-on-surface-variant max-w-md mx-auto">Upload your materials and click Generate Roadmap when you are ready. We'll analyze your files and build a structured learning plan.</p>
+            <div class="mt-6 flex items-center justify-center gap-4">
+              <p-button label="Add Files" icon="pi pi-upload" severity="secondary" (onClick)="addFileInput.click()" />
+              <p-button label="Generate Roadmap" icon="pi pi-sitemap" (onClick)="generateRoadmap()" [disabled]="!canGenerateRoadmap() || roadmapGenerating()" [loading]="roadmapGenerating()" />
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- View Files Dialog -->
+  <p-dialog
+    header="Course Materials"
+    [(visible)]="filesDialogOpen"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: '40rem', maxWidth: '95vw' }"
+  >
+    <div class="flex flex-col gap-1">
+      <p class="text-xs text-on-surface-variant mb-2">
+        {{ course()!.materials.length }} {{ course()!.materials.length === 1 ? 'file' : 'files' }}
+      </p>
+      <div class="rounded-lg border border-outline-variant overflow-y-auto max-h-80">
+        @for (mat of course()!.materials; track mat.id; let i = $index) {
+          <div
+            class="flex items-center gap-3 px-3 py-2.5 hover:bg-surface-container-high transition-colors"
+            [class.border-t]="i > 0"
+            [class.border-outline-variant]="i > 0"
+          >
+            <i [class]="fileIcon(mat.originalFileName) + ' text-primary flex-shrink-0'"></i>
+            <span class="flex-1 text-sm text-on-surface truncate min-w-0">
+              {{ mat.originalFileName }}
+            </span>
+            <span class="text-xs flex-shrink-0" [class]="materialStatusClass(mat.status)">{{ mat.status }}</span>
+            <span class="text-xs text-on-surface-variant flex-shrink-0 ml-2">{{ formatSize(mat.fileSizeBytes) }}</span>
+            <button
+              class="flex-shrink-0 text-on-surface-variant hover:text-red-500 transition-colors ml-1 cursor-pointer"
+              (click)="confirmDeleteMaterial(mat)"
+              [attr.aria-label]="'Delete ' + mat.originalFileName"
+            >
+              <i class="pi pi-trash text-xs"></i>
+            </button>
+          </div>
+        } @empty {
+          <p class="p-4 text-sm text-on-surface-variant italic text-center">No files remaining.</p>
+        }
+      </div>
+    </div>
+  </p-dialog>
+
+  <p-dialog
+    header="Course Summary"
+    [(visible)]="summaryDialogOpen"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: '48rem', maxWidth: '95vw' }"
+  >
+    <div
+      class="markdown-content break-words text-sm text-on-surface-variant font-sans"
+      [innerHTML]="renderMarkdown(courseSummaryHtml() || 'Summary is not ready yet.')"
+    ></div>
+  </p-dialog>
+
+  <p-dialog
+    header="Course Review"
+    [(visible)]="reviewsDialogOpen"
+    (visibleChange)="onReviewDialogVisibleChange($event)"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: '48rem', maxWidth: '95vw' }"
+  >
+    <div
+      class="markdown-content break-words text-sm text-on-surface-variant font-sans"
+      [innerHTML]="renderMarkdown(selectedReviewHtml() || 'Review is not available.')"
+    ></div>
+  </p-dialog>
+
+  <app-lesson-dialog
+    [(visible)]="lessonDialogOpen"
+    [(selectedLesson)]="selectedLesson"
+    [courseId]="course()!.id"
+    [modules]="course()!.roadmap?.modules || []"
+    (courseUpdated)="course.set($event)"
+    (openExamEvent)="openExam($event.exam, $event.module)"
+  />
+
+  <app-exam-dialog
+    [(visible)]="examDialogOpen"
+    [(selectedExam)]="selectedExam"
+    [(viewAttemptId)]="viewAttemptId"
+    [courseId]="course()!.id"
+    [modules]="course()!.roadmap?.modules || []"
+    [roadmapStats]="roadmapStats()"
+    (courseUpdated)="course.set($event)"
+    (examAttemptsUpdated)="loadExamAttempts(course()!.id)"
+  />
+
+  <p-dialog
+    header="Reset Course"
+    [(visible)]="resetDialogOpen"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: '30rem', maxWidth: '95vw' }"
+  >
+    <div class="text-sm text-on-surface-variant">
+      This will delete roadmap history, generated lessons, exam attempts, and progress for this course.
+      <br />
+      <span class="font-medium">Course name and uploaded files will stay.</span>
+    </div>
+    @if (resetError()) {
+      <div class="text-sm text-red-500 mt-3">{{ resetError() }}</div>
+    }
+    <ng-template #footer>
+      <div class="flex justify-end gap-2">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [text]="true"
+          (onClick)="resetDialogOpen.set(false)"
+          [disabled]="resettingCourse()"
+        />
+        <p-button
+          label="Reset Course"
+          icon="pi pi-refresh"
+          severity="danger"
+          (onClick)="resetCourse()"
+          [loading]="resettingCourse()"
+        />
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Confirm Delete Course Dialog -->
+  <p-dialog
+    header="Delete Course"
+    [(visible)]="deleteDialogOpen"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: '26rem', maxWidth: '95vw' }"
+  >
+    <p class="text-on-surface-variant">
+      Are you sure you want to delete <strong>{{ course()!.name }}</strong>? This will remove all materials and progress. This cannot be undone.
+    </p>
+    <ng-template #footer>
+      <div class="flex justify-end gap-2">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [text]="true"
+          (onClick)="deleteDialogOpen.set(false)"
+          [disabled]="deleting()"
+        />
+        <p-button
+          label="Delete"
+          icon="pi pi-trash"
+          severity="danger"
+          (onClick)="deleteCourse()"
+          [loading]="deleting()"
+        />
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Rename Course Dialog -->
+  <p-dialog
+    header="Edit course name"
+    [(visible)]="renameDialogOpen"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: '28rem', maxWidth: '95vw' }"
+    (onHide)="closeRenameDialog()"
+  >
+    <div class="flex flex-col gap-3">
+      <label class="text-sm font-medium text-on-surface-variant" for="course-rename-input">New name</label>
+      <input
+        id="course-rename-input"
+        pInputText
+        class="w-full"
+        [value]="renameName()"
+        (input)="onRenameInput($event)"
+        maxlength="120"
+        autocomplete="off"
+      />
+      @if (renameError()) {
+        <p class="text-sm text-red-500">{{ renameError() }}</p>
+      }
+    </div>
+    <ng-template #footer>
+      <div class="flex justify-end gap-2">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [text]="true"
+          (onClick)="closeRenameDialog()"
+          [disabled]="renaming()"
+        />
+        <p-button
+          label="Save"
+          icon="pi pi-check"
+          (onClick)="saveCourseName()"
+          [loading]="renaming()"
+        />
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Confirm Delete Material Dialog -->
+  <p-dialog
+    header="Delete File"
+    [(visible)]="deleteMaterialDialogOpen"
+    [modal]="true"
+    [draggable]="false"
+    [style]="{ width: '26rem', maxWidth: '95vw' }"
+  >
+    @if (materialToDelete()) {
+      <p class="text-on-surface-variant">
+        Are you sure you want to delete <strong>{{ materialToDelete()!.originalFileName }}</strong>?
+      </p>
+    }
+    <ng-template #footer>
+      <div class="flex justify-end gap-2">
+        <p-button
+          label="Cancel"
+          severity="secondary"
+          [text]="true"
+          (onClick)="deleteMaterialDialogOpen.set(false)"
+          [disabled]="deletingMaterial()"
+        />
+        <p-button
+          label="Delete"
+          icon="pi pi-trash"
+          severity="danger"
+          (onClick)="deleteMaterial()"
+          [loading]="deletingMaterial()"
+        />
+      </div>
+    </ng-template>
+  </p-dialog>
+} @else if (loading()) {
+  <div class="flex items-center justify-center py-12">
+    <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
+  </div>
+} @else {
+  <div class="text-center py-12">
+    <p class="text-on-surface-variant">Course not found.</p>
+  </div>
+}

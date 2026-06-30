@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/RoadmapAI.Api/">
+    <Project Path="RoadmapAI.Api/RoadmapAI.Api.csproj" />
+  </Folder>
+</Solution>
